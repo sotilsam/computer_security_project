@@ -1,0 +1,423 @@
+/*  -----backgroud and container----- */
+/*  -----index page----- */
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* background-image: url('/static/assets/background.jpg'); */
+    background-image: url('/static/assets/back.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    animation: gradientBG 15s ease infinite;
+    overflow: hidden;
+}
+
+@keyframes gradientBG {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.messages-box {
+    margin-bottom: 20px;
+}
+
+.message {
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.message.error {
+    background: rgba(255, 0, 0, 0.3);
+    color: #ffdddd;
+}
+
+.message.success {
+    background: rgba(0, 255, 0, 0.3);
+    color: #eaffea;
+}
+
+
+.glass-container {
+    position: relative;
+    width: 380px;
+    padding: 40px;
+    border-radius: 20px;
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(45px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 25px 45px rgba(0, 0, 0, 0.4);
+    z-index: 1;
+    overflow: hidden;
+    max-height: 85vh;
+    /* locks the container height */
+    display: flex;
+    flex-direction: column;
+}
+
+
+
+.glass-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    transform: skewX(-15deg);
+    transition: 0.5s;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.glass-container:hover::before {
+    left: 150%;
+}
+
+.glass-container h1 {
+    color: #dfcb1e;
+    color: #fff;
+    font-size: 30px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 1px;
+    margin-bottom: 40px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+}
+
+.glass-container h2 {
+    color: #fff;
+    font-size: 28px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 1px;
+    margin-bottom: 40px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    outline: none;
+    border-radius: 35px;
+    font-size: 16px;
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+
+.input-group input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.input-group input:focus {
+    color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+
+.input-group label {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 16px;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus+label,
+.input-group input:valid+label {
+    top: 0;
+    left: 15px;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: #fff;
+}
+
+
+.remember-forgot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.remember-forgot label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.remember-forgot input {
+    margin-right: 8px;
+    accent-color: #fff;
+}
+
+.remember-forgot a {
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.remember-forgot a:hover {
+    text-decoration: underline;
+}
+
+
+
+/*  ---------additions---------- */
+/*  --------forgot page--------- */
+/*  --------register page--------- */
+/*  --------dashboard page--------- */
+
+
+p {
+    color: #fff;
+    margin-bottom: 25px;
+    font-size: 17px;
+}
+
+
+.login-btn,
+.register-btn,
+.change-btn,
+.send-code-btn {
+    width: 100%;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    outline: none;
+    border-radius: 35px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.login-btn:hover,
+.register-btn:hover,
+.change-btn:hover,
+.send-code-btn:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.register-link,
+.login-link,
+.logout-link {
+    text-align: center;
+    margin-top: 25px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+}
+
+.register-link a,
+.login-link a,
+.logout-link a {
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.register-link a:hover,
+.login-btn a :hover,
+.logout-btn a :hover {
+    text-decoration: underline;
+}
+
+
+
+
+/* -------- Dashboard page additions -------- */
+
+h3 {
+    color: #fff;
+    text-align: left;
+    margin-top: 16px;
+    margin-bottom: 12px;
+    font-size: 17px;
+}
+
+
+
+.nav-btns {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.nav-btns a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 10px 18px;
+    line-height: 1.2;
+    height: 68px;
+
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.nav-btns a:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateY(-3px);
+}
+
+.dashboard-input {
+    width: 100%;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    outline: none;
+    border-radius: 35px;
+    font-size: 16px;
+    color: #fff;
+    margin-bottom: 15px;
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.05);
+}
+
+
+.add-client-btn {
+    width: 50%;
+    margin: 0;
+    display: block;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.25);
+    border: none;
+    outline: none;
+    border-radius: 35px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 20px;
+    margin-top: -30px;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.05);
+}
+
+.add-client-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateY(-3px);
+}
+
+/* Dashboard only */
+.dashboard-container {
+    max-height: 90vh;
+    /* שלא יגדל מעבר למסך */
+    overflow: hidden;
+    /* שלא יצא החוצה */
+    padding-top: 28px;
+    /* קצת פחות כדי להרים הכל למעלה */
+    padding-bottom: 28px;
+}
+
+/* פחות רווחים כדי שהרשימה לא תרד למטה */
+.dashboard-container h1 {
+    margin-bottom: 22px;
+}
+
+.dashboard-container h2 {
+    margin-bottom: 18px;
+}
+
+.dashboard-container h3 {
+    margin-top: 14px;
+    margin-bottom: 10px;
+}
+
+/* הגלילה תהיה רק כאן */
+.dashboard-container .client-list-wrapper {
+    margin-top: 8px;
+    max-height: 110px;
+    /* בערך 2 פריטים, בשלישי יתחיל scroll */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 6px;
+    /* מקום לסקרולבר */
+}
+
+.dashboard-container .client-list {
+    margin: 0;
+    padding: 0;
+}
+
+
+.client-list-wrapper {
+    margin-top: 6px;
+    max-height: 170px;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    /* IMPORTANT for flex layouts */
+    flex: 0 0 auto;
+}
+
+
+
+.client-list li {
+    list-style: none;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 12px 15px;
+    border-radius: 15px;
+    margin-bottom: 10px;
+    color: #fff;
+    font-size: 15px;
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.05);
+    line-height: 20px;
+}
+
+.client-list li:last-child {
+    margin-bottom: 0;
+}

@@ -1,0 +1,53 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{% static 'allforms.css' %}">
+
+</head>
+
+<body>
+
+    <div class="glass-container dashboard-container">
+
+        <h1>Communication LTD</h1>
+
+        <h2>Welcome, {{username}}!</h2>
+        <div class="nav-btns">
+            <a href="{% url 'register' %}">Create New User</a>
+            <a href="{% url 'change_password' %}">Change Password</a>
+            <a href="{% url 'logout' %}">Logout</a>
+
+        </div>
+        <hr>
+        <h3>Add New Client</h3>
+        <form method="POST" action="{% url 'dashboard' %}">
+            {% csrf_token %}
+            <div class="input-group">
+                <input type="text" name="client_name" class="dashboard-input" placeholder="Client Name" required>
+                <input type="email" name="client_email" class="dashboard-input" placeholder="Client Email" required>
+                <input type="tel" name="client_phone" class="dashboard-input" placeholder="Client Phone Number"
+                    required>
+            </div>
+
+            <button class="add-client-btn" type="submit">Add Client</button>
+        </form>
+
+        <h3>Client List:</h3>
+
+        <div class="client-list-wrapper">
+            <ul class="client-list">
+                {% for c in clients %}
+                <li>{{ c.name }} — {{ c.email }} — {{ c.phone }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+    </div>
+</body>
+
+</html>
