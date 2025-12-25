@@ -17,6 +17,15 @@
         <h1>Communication LTD</h1>
 
         <h2>Welcome, {{username}}!</h2>
+
+        {% if messages %}
+        <div class="messages-box">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <div class="nav-btns">
             <a href="{% url 'register' %}">Create New User</a>
             <a href="{% url 'change_password' %}">Change Password</a>
