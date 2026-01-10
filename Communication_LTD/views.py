@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib import messages
 from django.db.models import Q
+from django.utils.html import escape
 from .models import User, Client, ResetCode
 from .utils import check_password_rules, hash_password, hash_code
 import os
