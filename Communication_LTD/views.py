@@ -1,3 +1,4 @@
+from django.utils.html import escape
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib import messages
