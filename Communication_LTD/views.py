@@ -67,6 +67,10 @@ def register_view(request):
             messages.error(request, "Passwords do not match")
             return redirect("register")
 
+        if not (re.match(r'[a-zA-Z0-9]+@[a-zA-Z0-9]+.[a-zA-Z]{2,}$', safeEmail)):
+            messages.error(request, "Invalid email")
+            return redirect("register")
+            
         valid, msg = check_password_rules(password)
         if not valid:
             messages.error(request, msg)
