@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib import messages
 from django.db.models import Q
-from .models import User, Client, ResetCode
-from .utils import check_password_rules, hash_password, hash_code
+from .models import User, Client, ResetCode, PasswordHistory
+from .utils import check_password_rules, hash_password, hash_code, load_password_rules
 import os
 import random
 from django.core.mail import send_mail
@@ -34,13 +34,34 @@ def login_view(request):
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             messages.error(request, "User not found")
-            return redirect("login") 
+            return redirect("login")
+
+        # Check if user is locked
+        rules = load_password_rules()
+        max_attempts = rules.get("max_failed_logins", 3)
+
+        if user.is_locked:
+            messages.error(request, f"Account locked due to {max_attempts} failed login attempts. Contact administrator.")
+            return redirect("login")
 
         hashed, _ = hash_password(password, user.salt)
 
         if hashed != user.password_hash:
-            messages.error(request, "Incorrect password")
-            return redirect("login") 
+            # Increment failed attempts
+            user.failed_login_attempts += 1
+            if user.failed_login_attempts >= max_attempts:
+                user.is_locked = True
+                user.save()
+                messages.error(request, f"Account locked due to {max_attempts} failed login attempts. Contact administrator.")
+            else:
+                user.save()
+                remaining = max_attempts - user.failed_login_attempts
+                messages.error(request, f"Incorrect password. {remaining} attempts remaining.")
+            return redirect("login")
+
+        # Successful login - reset failed attempts
+        user.failed_login_attempts = 0
+        user.save()
 
         request.session["username"] = username
         return redirect("dashboard")
@@ -72,9 +93,16 @@ def register_view(request):
 
         hashed, salt = hash_password(password)
 
-        User.objects.create(
+        user = User.objects.create(
             username=username,
             email=email,
+            password_hash=hashed,
+            salt=salt
+        )
+
+        # Save password to history
+        PasswordHistory.objects.create(
+            user=user,
             password_hash=hashed,
             salt=salt
         )
@@ -223,13 +251,22 @@ def reset_password_view(request):
             messages.error(request, "Passwords do not match")
             return redirect("reset_password")
 
-        valid, msg = check_password_rules(password)
+        user = User.objects.get(username=username)
+
+        # Check password rules including history
+        valid, msg = check_password_rules(password, user=user)
         if not valid:
             messages.error(request, msg)
             return redirect("reset_password")
 
-        user = User.objects.get(username=username)
         hashed, salt = hash_password(password)
+
+        # Save old password to history before updating
+        PasswordHistory.objects.create(
+            user=user,
+            password_hash=user.password_hash,
+            salt=user.salt
+        )
 
         user.password_hash = hashed
         user.salt = salt
@@ -258,17 +295,17 @@ def change_password_view(request):
         new = request.POST.get("new_password")
         confirm = request.POST.get("confirm")
 
-                # DEBUG 1
+        # DEBUG 1
         print("DEBUG USER:", username, "id:", user.id)
         print("DEBUG BEFORE:", user.password_hash[:12], "salt:", str(user.salt)[:12])
-
 
         hashed_old, _ = hash_password(old, user.salt)
         if hashed_old != user.password_hash:
             messages.error(request, "Incorrect, old password")
             return redirect("change_password")
 
-        valid, msg = check_password_rules(new)
+        # Check password rules including history
+        valid, msg = check_password_rules(new, user=user)
         if not valid:
             messages.error(request, msg)
             return redirect("change_password")
@@ -278,11 +315,19 @@ def change_password_view(request):
             return redirect("change_password")
 
         hashed, salt = hash_password(new)
+
+        # Save old password to history before updating
+        PasswordHistory.objects.create(
+            user=user,
+            password_hash=user.password_hash,
+            salt=user.salt
+        )
+
         user.password_hash = hashed
         user.salt = salt
         user.save()
 
-                # DEBUG 2
+        # DEBUG 2
         user.refresh_from_db()
         print("DEBUG AFTER:", user.password_hash[:12], "salt:", str(user.salt)[:12])
 

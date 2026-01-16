@@ -6,9 +6,21 @@ class User(models.Model):
     email = models.CharField(max_length=255, unique=True)
     password_hash = models.CharField(max_length=255)
     salt = models.CharField(max_length=255)
+    failed_login_attempts = models.IntegerField(default=0)
+    is_locked = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
+
+
+class PasswordHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_history')
+    password_hash = models.CharField(max_length=255)
+    salt = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
 
 

