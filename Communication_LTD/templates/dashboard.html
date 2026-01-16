@@ -51,7 +51,7 @@
         <div class="client-list-wrapper">
             <ul class="client-list">
                 {% for c in clients %}
-                <li>{{ c.name }} — {{ c.email }} — {{ c.phone }}</li>
+                <li>{{ c.name | safe }} — {{ c.email }} — {{ c.phone }}</li>
                 {% endfor %}
             </ul>
         </div>

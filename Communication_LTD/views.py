@@ -10,10 +10,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 import secrets
 import hashlib
-
-
-import secrets
-import hashlib
+from django.utils.html import escape
 
 def generate_sha1_code():
     #Create random bytes, then derive a SHA-1 based code
@@ -24,7 +21,6 @@ def generate_sha1_code():
 def sha1_hex(text: str) -> str:
     # Hash user input with SHA-1 for storage/compare
     return hashlib.sha1(text.encode("utf-8")).hexdigest()
-
 
 
 # LOGIN
@@ -101,8 +97,11 @@ def dashboard_view(request):
 
     if request.method == "POST":
         client_name = request.POST.get("client_name", "").strip()
+        client_name = escape(client_name)
         client_email = request.POST.get("client_email", "").strip()
+        client_email = escape(client_name)
         client_phone = request.POST.get("client_phone", "").strip()
+        client_phone = escape(client_phone)
 
         if not client_name:
             messages.error(request, "Client name is required")

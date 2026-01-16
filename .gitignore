@@ -1,5 +1,4 @@
 sent_emails/
-db.sqlite3
 __pycache__/
 *.log
 .DS_Store
