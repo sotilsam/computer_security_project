@@ -11,6 +11,7 @@ from django.conf import settings
 import secrets
 import hashlib
 from django.utils.html import escape
+from django.db import connection 
 
 def generate_sha1_code():
     #Create random bytes, then derive a SHA-1 based code
@@ -30,20 +31,23 @@ def login_view(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
 
+        cursor = connection.cursor()
+        query = f"SELECT * FROM communication_ltd_user WHERE username = '{username}' AND password_hash = '{password}'"
+
         try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            messages.error(request, "User not found")
-            return redirect("login") 
+            cursor.execute(query)
+            row = cursor.fetchone()
+        except Exception:
+            row = None
 
-        hashed, _ = hash_password(password, user.salt)
-
-        if hashed != user.password_hash:
-            messages.error(request, "Incorrect password")
-            return redirect("login") 
-
-        request.session["username"] = username
-        return redirect("dashboard")
+        if row:
+            db_username = row[1] 
+            request.session["username"] = db_username
+            messages.success(request, f"Welcome back, {db_username}!")
+            return redirect("dashboard")
+        else:
+            messages.error(request, "User not found or incorrect password")
+            return redirect("login")
 
     return render(request, "login.html") 
 
@@ -72,15 +76,16 @@ def register_view(request):
 
         hashed, salt = hash_password(password)
 
-        User.objects.create(
-            username=username,
-            email=email,
-            password_hash=hashed,
-            salt=salt
-        )
-
-        messages.success(request, "Registration successful")
-        return redirect("login")
+        cursor = connection.cursor()
+        insert_query = f"INSERT INTO communication_ltd_user (username, email, password_hash, salt) VALUES ('{username}', '{email}', '{password}', '{salt}')"
+        
+        try:
+            cursor.execute(insert_query)
+            messages.success(request, "Registration successful")
+            return redirect("login")
+        except Exception as e:
+            messages.error(request, f"Registration failed: {str(e)}")
+            return redirect("register")
 
     return render(request, "register.html")
 
@@ -93,28 +98,31 @@ def dashboard_view(request):
         return redirect("login")
 
     username = request.session["username"]
-    user = User.objects.get(username=username)
+    
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return redirect("login")
 
     if request.method == "POST":
-        client_name = request.POST.get("client_name", "").strip()
-        client_name = escape(client_name)
-        client_email = request.POST.get("client_email", "").strip()
-        client_email = escape(client_name)
-        client_phone = request.POST.get("client_phone", "").strip()
-        client_phone = escape(client_phone)
+        client_name = request.POST.get("client_name", "")
+        client_email = request.POST.get("client_email", "")
+        client_phone = request.POST.get("client_phone", "")
 
         if not client_name:
             messages.error(request, "Client name is required")
             return redirect("dashboard")
 
-        Client.objects.create(
-            name=client_name,
-            email=client_email,
-            phone=client_phone,
-
-        )
-
-        messages.success(request, "Client added successfully")
+        cursor = connection.cursor()
+        
+        insert_query = f"INSERT INTO communication_ltd_client (name, email, phone) VALUES ('{client_name}', '{client_email}', '{client_phone}')"
+        
+        try:
+            cursor.execute(insert_query)
+            messages.success(request, "Client added successfully")
+        except Exception as e:
+            messages.error(request, f"Error adding client: {str(e)}")
+        
         return redirect("dashboard")
 
     clients = Client.objects.all() 
@@ -123,6 +131,7 @@ def dashboard_view(request):
         "username": user.username,
         "clients": clients,
     })
+
 
 # LOGOUT
 
