@@ -1,0 +1,4 @@
+sent_emails/
+__pycache__/
+*.log
+.DS_Store

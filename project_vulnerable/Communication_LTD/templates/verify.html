@@ -1,0 +1,41 @@
+{% load static %}
+<!-- page for the verification code -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Code</title>
+    <link rel="stylesheet" href="{% static 'allforms.css' %}">
+</head>
+
+<body>
+    <div class="glass-container">
+
+        <h1>Verify Code</h1>
+
+        {% if messages %}
+        <div class="messages-box">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'verify' %}"> {% csrf_token %}
+
+            <!-- <div class="input-group">
+                <input type="text" name="username" placeholder="Username" required>
+            </div> -->
+
+            <div class="input-group">
+                <input type="text" name="code" placeholder="Verification Code" required>
+            </div>
+
+            <button type="submit" class="login-btn">Verify</button>
+
+        </form>
+    </div>
+</body>
+
+</html>
