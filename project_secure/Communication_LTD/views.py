@@ -5,6 +5,7 @@ from django.db.models import Q
 from .models import User, Client, ResetCode, PasswordHistory
 from .utils import check_password_rules, hash_password, hash_code, load_password_rules
 import os
+import re
 import random
 from django.core.mail import send_mail
 from django.conf import settings
@@ -28,7 +29,9 @@ def sha1_hex(text: str) -> str:
 def login_view(request):
     if request.method == "POST":
         username = request.POST.get("username")
+        username = escape(username)
         password = request.POST.get("password")
+        password = escape(password)
 
         try:
             user = User.objects.get(username=username)
@@ -74,8 +77,11 @@ def login_view(request):
 def register_view(request):
     if request.method == "POST":
         username = request.POST.get("username")
+        username = escape(username)
         email = request.POST.get("email")
+        email = escape(email)
         password = request.POST.get("password")
+        password = escape(password)
         confirm = request.POST.get("confirm")
 
         if password != confirm:
@@ -85,6 +91,10 @@ def register_view(request):
         valid, msg = check_password_rules(password)
         if not valid:
             messages.error(request, msg)
+            return redirect("register")
+        
+        if not((re.match(r'[a-zA-Z0-9]+@[a-zA-Z0-9]+.[a-zA-Z]{2,}$', email))):
+            messages.error(request, "Email is not valid")
             return redirect("register")
 
         if User.objects.filter(Q(username=username) | Q(email=email)).exists():
@@ -127,12 +137,16 @@ def dashboard_view(request):
         client_name = request.POST.get("client_name", "").strip()
         client_name = escape(client_name)
         client_email = request.POST.get("client_email", "").strip()
-        client_email = escape(client_name)
+        client_email = escape(client_email)
         client_phone = request.POST.get("client_phone", "").strip()
         client_phone = escape(client_phone)
 
         if not client_name:
             messages.error(request, "Client name is required")
+            return redirect("dashboard")
+        
+        if not((re.match(r'[a-zA-Z0-9]+@[a-zA-Z0-9]+.[a-zA-Z]{2,}$', client_email))):
+            messages.error(request, "Email is not valid")
             return redirect("dashboard")
 
         Client.objects.create(
@@ -204,6 +218,7 @@ def forgot_password_view(request):
 def verify_code_view(request):
     if request.method == "POST":
         code_input = request.POST.get("code", "").strip().upper()
+        code_input= escape(code_input)
 
         username = request.session.get("reset_username")
         if not username:
@@ -245,7 +260,9 @@ def reset_password_view(request):
 
     if request.method == "POST":
         password = request.POST.get("password")
+        password = escape(password)
         confirm = request.POST.get("confirm")
+        confirm = escape(confirm)
 
         if password != confirm:
             messages.error(request, "Passwords do not match")
@@ -288,12 +305,16 @@ def change_password_view(request):
         return redirect("login")
 
     username = request.session["username"]
+    username = escape(username)
     user = User.objects.get(username=username)
 
     if request.method == "POST":
         old = request.POST.get("old_password")
+        old = escape(old)
         new = request.POST.get("new_password")
+        new = escape(new)
         confirm = request.POST.get("confirm")
+        confirm= escape(confirm)
 
         # DEBUG 1
         print("DEBUG USER:", username, "id:", user.id)
