@@ -49,19 +49,11 @@ python manage.py makemigrations
 
 python manage.py migrate
 
-# Create admin user (optional)
+# Create admin user
 python manage.py createsuperuser
 
 # Run server
 python manage.py runserver
-```
-
-### 1.1. Create Admin user
-
-```bash
-#Open terminal and write
-python manage.py createsuperuser
-#After a quick login (email opptinal)
 ```
 
 ### 2. Access Application
@@ -158,5 +150,6 @@ client_name = escape(request.POST.get("client_name"))  # Sanitized
 - SHA-1 used only for temporary verification codes (assignment requirement)
 - HMAC+SHA256 used for password hashing (secure)
 - Database resets on migration changes
+
 
 
