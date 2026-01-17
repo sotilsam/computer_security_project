@@ -45,6 +45,8 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 # Create database
+python manage.py makemigrations
+
 python manage.py migrate
 
 # Create admin user (optional)
@@ -148,3 +150,4 @@ client_name = escape(request.POST.get("client_name"))  # Sanitized
 - SHA-1 used only for temporary verification codes (assignment requirement)
 - HMAC+SHA256 used for password hashing (secure)
 - Database resets on migration changes
+
