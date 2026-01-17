@@ -56,6 +56,14 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+### 1.1. Create Admin user
+
+```bash
+#Open terminal and write
+python manage.py createsuperuser
+#After a quick login (email opptinal)
+```
+
 ### 2. Access Application
 
 - **Main app**: http://127.0.0.1:8000/
@@ -150,4 +158,5 @@ client_name = escape(request.POST.get("client_name"))  # Sanitized
 - SHA-1 used only for temporary verification codes (assignment requirement)
 - HMAC+SHA256 used for password hashing (secure)
 - Database resets on migration changes
+
 
