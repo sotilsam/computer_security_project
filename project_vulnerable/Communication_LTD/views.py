@@ -1,11 +1,9 @@
 """
-VULNERABLE VERSION - FOR DEMONSTRATION PURPOSES ONLY
+VULNERABLE VERSION 
 This version contains intentional security vulnerabilities:
 1. SQL Injection in login, register, and dashboard
 2. Stored XSS in dashboard (client name display)
 3. No input sanitization
-
-DO NOT USE IN PRODUCTION!
 """
 
 import hashlib

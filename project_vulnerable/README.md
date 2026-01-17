@@ -1,7 +1,5 @@
 # Communication_LTD - Vulnerable Version
 
-⚠️ **WARNING**: Intentional security vulnerabilities for educational demonstration. DO NOT USE IN PRODUCTION!
-
 ## Quick Start
 
 ```bash

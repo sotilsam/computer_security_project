@@ -4,7 +4,6 @@ import os
 import json
 from django.conf import settings
 
-#פונקציה להמרת קובץ גסון
 def load_password_rules():
     config_path = settings.BASE_DIR / "passwordConfig.json"
     with open(config_path, "r") as f:
@@ -27,7 +26,7 @@ def check_password_rules(password, user=None):
     Also checks password history and common passwords dictionary
     """
     rules = load_password_rules()
-#  ככה רולס נראה עכשיו וככה אפשר להשתמש בנתונים שלו בפונקציה - dict
+
 # rules = {
 #     "min_length": 10,
 #     "complexity": {

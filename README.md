@@ -141,8 +141,8 @@ client_name = escape(request.POST.get("client_name"))  # Sanitized
 
 ## Assignment Requirements
 
-✅ **Part A**: Password policy, HMAC+Salt, password history, account locking
-✅ **Part B**: Separate vulnerable/secure versions demonstrating SQLi and XSS
+ **Part A**: Password policy, HMAC+Salt, password history, account locking
+ **Part B**: Separate vulnerable/secure versions demonstrating SQLi and XSS
 
 ## Notes
 

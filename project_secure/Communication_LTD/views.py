@@ -193,7 +193,7 @@ def forgot_password_view(request):
             defaults={"code_hash": code_hash}
         )
 
-        # English comment: Send the plain code, store only the hash
+        # Send the plain code, store only the hash
         send_mail(
             subject="Password reset code",
             message=f"Your verification code is: {code}",
