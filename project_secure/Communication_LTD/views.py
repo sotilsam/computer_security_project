@@ -14,13 +14,11 @@ import hashlib
 from django.utils.html import escape
 
 def generate_sha1_code():
-    #Create random bytes, then derive a SHA-1 based code
     seed = secrets.token_bytes(32)
     code = hashlib.sha1(seed).hexdigest()[:8].upper()
     return code
 
 def sha1_hex(text: str) -> str:
-    # Hash user input with SHA-1 for storage/compare
     return hashlib.sha1(text.encode("utf-8")).hexdigest()
 
 
@@ -33,18 +31,15 @@ def login_view(request):
         username = escape(request.POST.get("username", "").strip())
         password = escape(request.POST.get("password", ""))
 
-        # Load rules for max attempts
         rules = load_password_rules()
         max_attempts = rules.get("max_failed_logins", 3)
 
-        # Try to find user, but never reveal if exists
         user = User.objects.filter(username=username).first()
 
         if not user:
             messages.error(request, GENERIC_LOGIN_ERROR)
             return redirect("login")
 
-        # If locked, still return the same generic message
         if user.is_locked:
             messages.error(request, GENERIC_LOGIN_ERROR)
             return redirect("login")
@@ -52,17 +47,14 @@ def login_view(request):
         hashed, _ = hash_password(password, user.salt)
 
         if hashed != user.password_hash:
-            # Increment failed attempts and lock if needed
             user.failed_login_attempts += 1
             if user.failed_login_attempts >= max_attempts:
                 user.is_locked = True
             user.save()
 
-            # Always generic message
             messages.error(request, GENERIC_LOGIN_ERROR)
             return redirect("login")
 
-        # Successful login: reset failed attempts
         user.failed_login_attempts = 0
         user.save()
 
@@ -272,7 +264,6 @@ def reset_password_view(request):
 
         user = User.objects.get(username=username)
 
-        # Check password rules including history
         valid, msg = check_password_rules(password, user=user)
         if not valid:
             messages.error(request, msg)
@@ -280,7 +271,6 @@ def reset_password_view(request):
 
         hashed, salt = hash_password(password)
 
-        # Save old password to history before updating
         PasswordHistory.objects.create(
             user=user,
             password_hash=user.password_hash,
@@ -327,7 +317,6 @@ def change_password_view(request):
             messages.error(request, "Incorrect, old password")
             return redirect("change_password")
 
-        # Check password rules including history
         valid, msg = check_password_rules(new, user=user)
         if not valid:
             messages.error(request, msg)
@@ -338,8 +327,6 @@ def change_password_view(request):
             return redirect("change_password")
 
         hashed, salt = hash_password(new)
-
-        # Save old password to history before updating
         PasswordHistory.objects.create(
             user=user,
             password_hash=user.password_hash,
