@@ -27,49 +27,51 @@ def sha1_hex(text: str) -> str:
 # LOGIN
 
 def login_view(request):
+    GENERIC_LOGIN_ERROR = "Username or password is incorrect"
+
     if request.method == "POST":
-        username = request.POST.get("username")
-        username = escape(username)
-        password = request.POST.get("password")
-        password = escape(password)
+        username = escape(request.POST.get("username", "").strip())
+        password = escape(request.POST.get("password", ""))
 
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            messages.error(request, "User not found")
-            return redirect("login")
-
-        # Check if user is locked
+        # Load rules for max attempts
         rules = load_password_rules()
         max_attempts = rules.get("max_failed_logins", 3)
 
+        # Try to find user, but never reveal if exists
+        user = User.objects.filter(username=username).first()
+
+        if not user:
+            messages.error(request, GENERIC_LOGIN_ERROR)
+            return redirect("login")
+
+        # If locked, still return the same generic message
         if user.is_locked:
-            messages.error(request, f"Account locked due to {max_attempts} failed login attempts. Contact administrator.")
+            messages.error(request, GENERIC_LOGIN_ERROR)
             return redirect("login")
 
         hashed, _ = hash_password(password, user.salt)
 
         if hashed != user.password_hash:
-            # Increment failed attempts
+            # Increment failed attempts and lock if needed
             user.failed_login_attempts += 1
             if user.failed_login_attempts >= max_attempts:
                 user.is_locked = True
-                user.save()
-                messages.error(request, f"Account locked due to {max_attempts} failed login attempts. Contact administrator.")
-            else:
-                user.save()
-                remaining = max_attempts - user.failed_login_attempts
-                messages.error(request, f"Incorrect password. {remaining} attempts remaining.")
+            user.save()
+
+            # Always generic message
+            messages.error(request, GENERIC_LOGIN_ERROR)
             return redirect("login")
 
-        # Successful login - reset failed attempts
+        # Successful login: reset failed attempts
         user.failed_login_attempts = 0
         user.save()
 
         request.session["username"] = username
         return redirect("dashboard")
 
-    return render(request, "login.html") 
+    return render(request, "login.html")
+
+
 
 
 # REGISTER
